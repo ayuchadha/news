@@ -4,18 +4,13 @@ from datetime import datetime, timedelta
 from typing import Tuple
 
 from dateutil.parser import parse as ps
-from dateutil.relativedelta import relativedelta
-from retry import retry
-from RPA.Browser.Selenium import Selenium
-from RPA.Excel.Files import Files
-from RPA.HTTP import HTTP
-from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        TimeoutException)
-
 from excel import Excel
 from filepaths import DIRECTORIES
 from logger import logger
-
+from RPA.Browser.Selenium import Selenium
+from RPA.Excel.Files import Files
+from RPA.HTTP import HTTP
+from SeleniumLibrary.errors import ElementNotFound
 
 
 class NewsFromReuters:
@@ -53,7 +48,7 @@ class NewsFromReuters:
         news_available = False
         try:
             self.browser.wait_until_element_is_visible(
-                "//div[@class='search-results__sectionContainer__34n_c']", 30)
+                "//div[@class='search-results__sectionContainer__34n_c']", 60)
         except AssertionError:
             message = f"No news found for the searched phrase: {self.phrase}"
             news_available = False
@@ -143,60 +138,48 @@ class NewsFromReuters:
 
         number_of_results = self.browser.get_text(
             f'(//span[@class = "text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 count"])')
-        count = 0
 
-        image_container = self.browser.is_element_enabled(
-            f'(//div[@class="media-story-card__placement-container__1R55-"])[{index}]')
+        headline_ele = self.browser.is_element_enabled(
+            f'(//h3[@class="text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 heading__base__2T28j heading__heading_6__RtD9P"])[{index}]')
 
-        if image_container:
-
+        if headline_ele:
+            self.browser.wait_until_element_is_enabled(
+                f'(//h3[@class="text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 heading__base__2T28j heading__heading_6__RtD9P"])[{index}]', 10)
             self.browser.scroll_element_into_view(
-                f'(//div[@class="media-story-card__image-container__gQPAN"])[{index}]//div[@class="styles__image-container__skIG1 styles__cover__2dX1S styles__center_center__1AaPV styles__apply-ratio__1_FYQ styles__transition__1DEuZ"]//img')
-
-            video_element = self.browser.is_element_enabled(
-                f'(//div[@class="media-story-card__image-container__gQPAN"])[{index}]//div[@class="media-story-card__media__27Yc8 media__symbol__1-WHq media__corner__-C897"]')
-
-            if video_element:
-                print("This item contains a video.")
-                image_src = self.browser.get_element_attribute(
-                    f'(//div[@class="media-story-card__image-container__gQPAN"])[{index}]//div[@class="styles__image-container__skIG1"]//img', 'src')
-            else:
-                print("This item does not contain a video.")
-                image_src = self.browser.get_element_attribute(
-                    f'(//div[@class="media-story-card__image-container__gQPAN"])[{index}]//div[@class="styles__image-container__skIG1 styles__cover__2dX1S styles__center_center__1AaPV styles__apply-ratio__1_FYQ styles__transition__1DEuZ"]//img', 'src')
+                f'(//h3[@class="text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 heading__base__2T28j heading__heading_6__RtD9P"])[{index}]')
 
             headline = self.browser.get_text(
                 f'(//h3[@class="text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 heading__base__2T28j heading__heading_6__RtD9P"])[{index}]')
+            logger.info(headline)
 
             date = self.browser.get_text(
                 f'(//time[@class="text__text__1FZLe text__inherit-color__3208F text__regular__2N1Xr text__extra_small__1Mw6v body__base__22dCE body__extra_small_body__3QTYe media-story-card__time__2i9EK"])[{index}]')
+            logger.info(date)
 
-            image_filename = f'image_news{index}.png'
+            try:
+                image_src = self.browser.get_element_attribute(
+                    f'(//div[@class="media-story-card__placement-container__1R55-"]//div//img)[{index}]', 'src')
 
-            image_path = os.path.join(
-                DIRECTORIES.IMAGE_PATH, image_filename)
-            self.download_picture(image_src, image_path)
+                image_filename = f'image_news{index}.png'
+                logger.info(image_filename)
+
+                image_path = os.path.join(
+                    DIRECTORIES.IMAGE_PATH, image_filename)
+                self.download_picture(image_src, image_path)
+
+            except (AssertionError, ElementNotFound):
+                image_filename = ''
 
             money_present = self.is_money_present(headline)
+            logger.info(money_present)
 
             count_phrase = self.count_of_search_string(
                 headline, self.phrase.lower())
+            logger.info(count_phrase)
 
-        else:
-            headline = self.browser.get_text(
-                f'(//li[@class="search-results__item__2oqiX"])[{index}]//a[@class="text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 heading__base__2T28j heading__heading_6__RtD9P text-story-card__title__3R37x"]')
+        number_of_results = number_of_results.split('results')[0].strip()
 
-            date = self.browser.get_text(
-                f'(//li[@class="search-results__item__2oqiX"])[{index}]//time[@class="text__text__1FZLe text__inherit-color__3208F text__regular__2N1Xr text__extra_small__1Mw6v text-story-card__time__2w0XM"]')
-
-            image_filename = ''
-
-            money_present = self.is_money_present(headline)
-
-            count_phrase = self.count_of_search_string(
-                headline, self.phrase.lower())
-        count = count + 1
-        if count > 20 and count < number_of_results:
+        if index >= 20 and index < int(number_of_results):
             self.next_button()
 
         return headline, date, image_filename, money_present, count_phrase
@@ -214,6 +197,7 @@ class NewsFromReuters:
     def find_format(self, date_string: str) -> str:
         """Finds the correct date format for each date string.
         """
+        print(date_string)
         if self.check_date_format(date_string, "%B %d, %Y"):
             date = datetime.strptime(date_string, "%B %d, %Y")
 
@@ -239,9 +223,22 @@ class NewsFromReuters:
             date = datetime.strptime(date_string, "%b. %d %Y")
 
         else:
-            date = ps(date_string)
+            date = ps(date_string, ignoretz=True)
 
         return date
+
+    def start_news_date(self):
+        today = datetime.today()
+
+        if self.months <= 1:
+            start_date = today.replace(day=1)
+
+        else:
+            modified_date = today.replace(day=15)
+            start_date = (
+                modified_date - timedelta(days=(self.months - 1) * 30)).replace(day=1)
+
+        return start_date
 
     def get_data_lists(self) -> tuple:
         """Gets the lists for heading, Date, Image FIle Name, Money Present, Count Phrase.
@@ -252,52 +249,61 @@ class NewsFromReuters:
         image_filename_list = []
         money_present_list = []
         count_phrase_list = []
+        count = 1
+        number_of_results = self.browser.get_text(
+            f'(//span[@class = "text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 count"])')
 
-        list = self.browser.get_webelements(
-            f'(//li[@class="search-results__item__2oqiX"])')
-        for i in range(1, len(list)+1):
+        number_of_results = number_of_results.split('results')[0].strip()
+        loop_end = False
 
-            title, date, image_filename, money_present, count_phrase = self.get_news_data(
-                i)
+        start_date = self.start_news_date()
 
-            current_datetime = datetime.now()
+        while count < int(number_of_results):
+            list = self.browser.get_webelements(
+                f'(//li[@class="search-results__item__2oqiX"])')
+            for i in range(1, (len(list)+1)):
 
-            if 'an hour ago' in date or 'a min ago' in date:
-                date_to_check = datetime.today()
+                title, date, image_filename, money_present, count_phrase = self.get_news_data(
+                    i)
 
-            elif "min ago" in date:
-                minutes_ago = int(date.split()[0])
-                delta = timedelta(minutes=minutes_ago)
-                date_to_check = current_datetime - delta
+                current_datetime = datetime.now()
 
-            elif "sec ago" in date:
+                if 'an hour ago' in date or 'a min ago' in date:
+                    date_to_check = datetime.today()
 
-                seconds_ago = int(date.split()[0])
-                delta = timedelta(seconds=seconds_ago)
-                date_to_check = current_datetime - delta
+                elif "min ago" in date:
+                    minutes_ago = int(date.split()[0])
+                    delta = timedelta(minutes=minutes_ago)
+                    date_to_check = current_datetime - delta
 
-            elif "hours ago" in date:
+                elif "sec ago" in date:
 
-                hours_ago = int(date.split()[0])
-                delta = timedelta(hours=hours_ago)
-                date_to_check = current_datetime - delta
+                    seconds_ago = int(date.split()[0])
+                    delta = timedelta(seconds=seconds_ago)
+                    date_to_check = current_datetime - delta
 
-            else:
-                date_to_check = self.find_format(date)
+                elif "hours ago" in date:
 
-            today = datetime.today()
-            start_date = today - relativedelta({self.months})
+                    hours_ago = int(date.split()[0])
+                    delta = timedelta(hours=hours_ago)
+                    date_to_check = current_datetime - delta
 
-            if date_to_check >= start_date:
+                else:
+                    date_to_check = self.find_format(date)
 
-                headline_list.append(title)
-                date_list.append(date)
-                image_filename_list.append(image_filename)
-                money_present_list.append(money_present)
-                count_phrase_list.append(count_phrase)
+                if date_to_check >= start_date:
+                    print(f'news{i}')
+                    headline_list.append(title)
+                    date_list.append(date)
+                    image_filename_list.append(image_filename)
+                    money_present_list.append(money_present)
+                    count_phrase_list.append(count_phrase)
+                    count = count + 1
+                else:
+                    loop_end = True
+                    break
 
-            else:
-
+            if loop_end:
                 break
 
         return headline_list, date_list, image_filename_list, money_present_list, count_phrase_list
@@ -305,14 +311,16 @@ class NewsFromReuters:
     def download_picture(self, image_src: str, image_path: str) -> None:
         """Downloads the picture from url.
         """
-        HTTP().download(url=image_src, target_file=image_path)
+        self.http.download(url=image_src, target_file=image_path)
 
     def next_button(self) -> None:
         """Checks if the next page button is enabled for the current page and clicks it.
         """
         next_button_enabled = self.browser.is_element_enabled(
             f'(//button[contains(@aria-label, "Next stories")])')
+
         if next_button_enabled:
+
             self.browser.click_element(
                 f'(//button[contains(@aria-label, "Next stories")])')
 

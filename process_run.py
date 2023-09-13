@@ -43,11 +43,13 @@ class Process:
                                         'zip', DIRECTORIES.IMAGE_PATH)
                     shutil.rmtree(DIRECTORIES.IMAGE_PATH)
 
-                except:
+                except Exception as error:
                     logger.info(message)
+                    logger.info(error)
                     logger.info("Ending the process.")
 
         except Exception as e:
+            logger.info(e)
             news.browser.screenshot(
                 filename=DIRECTORIES.ERROR_SCREENSHOT_PATH)
             raise e
