@@ -4,13 +4,14 @@ from datetime import datetime, timedelta
 from typing import Tuple
 
 from dateutil.parser import parse as ps
-from excel import Excel
-from filepaths import DIRECTORIES
-from logger import logger
 from RPA.Browser.Selenium import Selenium
 from RPA.Excel.Files import Files
 from RPA.HTTP import HTTP
 from SeleniumLibrary.errors import ElementNotFound
+
+from excel import Excel
+from filepaths import DIRECTORIES
+from logger import logger
 
 
 class NewsFromReuters:
@@ -227,7 +228,9 @@ class NewsFromReuters:
 
         return date
 
-    def start_news_date(self):
+    def start_news_date(self) -> datetime:
+        """Gets the start date for the search of news data.
+        """
         today = datetime.today()
 
         if self.months <= 1:

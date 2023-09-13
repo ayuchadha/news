@@ -8,14 +8,9 @@ def workitems() -> dict:
     """ Returns:
             workitems.
     """
-    # work_item = WorkItems()
-    # work_item.get_input_work_item()
-    # workitem = work_item.get_work_item_variables()
-    workitem = {
-        "phrase": "India",
-        "section": "Business",
-        "months": 1
-    }
+    work_item = WorkItems()
+    work_item.get_input_work_item()
+    workitem = work_item.get_work_item_variables()
 
     return workitem
 
@@ -33,4 +28,3 @@ if __name__ == "__main__":
     logger.info('Initializing the Process')
     task()
     logger.info("Done.")
-    
