@@ -4,14 +4,17 @@ from datetime import datetime, timedelta
 from typing import Tuple
 
 from dateutil.parser import parse as ps
+from excel import Excel
+from filepaths import DIRECTORIES
+from logger import logger
 from RPA.Browser.Selenium import Selenium
 from RPA.Excel.Files import Files
 from RPA.HTTP import HTTP
 from SeleniumLibrary.errors import ElementNotFound
 
-from excel import Excel
-from filepaths import DIRECTORIES
-from logger import logger
+
+class MultipleSectionsInputError(Exception):
+    pass
 
 
 class NewsFromReuters:
@@ -68,18 +71,23 @@ class NewsFromReuters:
         """Sets the section value.
         Returns section value.
         """
-        if self.section == '' or self.section is None:
+        sec = ""
+        if not self.section:
             sec = "all"
-
         elif type(self.section) == str:
-            try:
+            if "," in self.section:
+                raise MultipleSectionsInputError
+            else:
                 sec = self.section.lower()
-            except AssertionError:
-                logger.info(f"Section {self.section} is not available.")
-                raise AssertionError
-
-        else:
-            logger.info(f"Section is not available.")
+        elif type(self.section) == list:
+            if len(self.section) > 1:
+                raise MultipleSectionsInputError
+            else:
+                if type(self.section[0]) == int:
+                    raise AssertionError
+                else:
+                    section = self.section[0].lower()
+        elif type(self.section) == int:
             raise AssertionError
         return sec
 
