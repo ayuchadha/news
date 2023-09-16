@@ -43,12 +43,12 @@ class Process:
                                         'zip', DIRECTORIES.IMAGE_PATH)
                     shutil.rmtree(DIRECTORIES.IMAGE_PATH)
 
-                except Exception as error:
+                except (AssertionError, TimeoutError) as error:
                     logger.info(message)
                     logger.info(error)
                     logger.info("Ending the process.")
 
-        except (AssertionError, TimeoutError) as e:
+        except Exception as e:
             logger.info(e)
             news.browser.screenshot(
                 filename=DIRECTORIES.ERROR_SCREENSHOT_PATH)
