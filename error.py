@@ -1,0 +1,2 @@
+class MultipleSectionsInputError(Exception):
+    pass

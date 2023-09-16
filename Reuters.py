@@ -11,11 +11,7 @@ from RPA.Browser.Selenium import Selenium
 from RPA.Excel.Files import Files
 from RPA.HTTP import HTTP
 from SeleniumLibrary.errors import ElementNotFound
-
-
-class MultipleSectionsInputError(Exception):
-    pass
-
+from error import MultipleSectionsInputError
 
 class NewsFromReuters:
 

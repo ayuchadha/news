@@ -48,7 +48,7 @@ class Process:
                     logger.info(error)
                     logger.info("Ending the process.")
 
-        except Exception as e:
+        except (AssertionError, TimeoutError) as e:
             logger.info(e)
             news.browser.screenshot(
                 filename=DIRECTORIES.ERROR_SCREENSHOT_PATH)

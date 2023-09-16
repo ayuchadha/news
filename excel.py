@@ -19,9 +19,6 @@ class Excel:
                 name=f"Sheet1", content=worksheet_data, header=True)
             self.files.save_workbook(filepath)
 
-        except Exception as e:
-            print(f"Error in creating excel---{e}")
-
         finally:
             self.files.open_workbook(filepath)
             if self.files.worksheet_exists(name="Sheet"):
