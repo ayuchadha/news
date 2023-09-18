@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime, timedelta
 from typing import Tuple
-
+from retry import retry
 from dateutil.parser import parse as ps
 from excel import Excel
 from filepaths import DIRECTORIES
@@ -11,6 +11,7 @@ from RPA.Browser.Selenium import Selenium
 from RPA.Excel.Files import Files
 from RPA.HTTP import HTTP
 from SeleniumLibrary.errors import ElementNotFound
+from selenium.common.exceptions import ElementClickInterceptedException
 from error import MultipleSectionsInputError
 
 class NewsFromReuters:
@@ -314,6 +315,8 @@ class NewsFromReuters:
         """Downloads the picture from url.
         """
         self.http.download(url=image_src, target_file=image_path)
+
+    @retry((ElementClickInterceptedException), 3, 3)
 
     def next_button(self) -> None:
         """Checks if the next page button is enabled for the current page and clicks it.
