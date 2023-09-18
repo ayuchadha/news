@@ -1,14 +1,12 @@
 import os
 import re
 from datetime import datetime, timedelta
-from typing import Tuple
 from retry import retry
 from dateutil.parser import parse as ps
 from excel import Excel
 from filepaths import DIRECTORIES
 from logger import logger
 from RPA.Browser.Selenium import Selenium
-from RPA.Excel.Files import Files
 from RPA.HTTP import HTTP
 from SeleniumLibrary.errors import ElementNotFound
 from selenium.common.exceptions import ElementClickInterceptedException
@@ -83,7 +81,7 @@ class NewsFromReuters:
                 if type(self.section[0]) == int:
                     raise AssertionError
                 else:
-                    section = self.section[0].lower()
+                    sec = self.section[0].lower()
         elif type(self.section) == int:
             raise AssertionError
         return sec
@@ -137,7 +135,7 @@ class NewsFromReuters:
             result.append(' '.join(words[i:i+len(search_string.split())]))
         return result.count(search_string.lower())
 
-    def get_news_data(self, index) -> tuple:
+    def get_news_data(self, index: str) -> tuple:
         """Gets all the required data from the webpage.
         (i.e. headline, date, image filename, count of phrase, count of money string and downloads image)
         """
@@ -317,7 +315,6 @@ class NewsFromReuters:
         self.http.download(url=image_src, target_file=image_path)
 
     @retry((ElementClickInterceptedException), 3, 3)
-
     def next_button(self) -> None:
         """Checks if the next page button is enabled for the current page and clicks it.
         """
