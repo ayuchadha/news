@@ -155,19 +155,16 @@ class NewsFromReuters:
 
             headline = self.browser.get_text(
                 f'(//h3[@class="text__text__1FZLe text__dark-grey__3Ml43 text__medium__1kbOh text__heading_6__1qUJ5 heading__base__2T28j heading__heading_6__RtD9P"])[{index}]')
-            logger.info(headline)
 
             date = self.browser.get_text(
                 f'(//time[@class="text__text__1FZLe text__inherit-color__3208F text__regular__2N1Xr text__extra_small__1Mw6v body__base__22dCE body__extra_small_body__3QTYe media-story-card__time__2i9EK"])[{index}]')
-            logger.info(date)
 
             try:
                 image_src = self.browser.get_element_attribute(
                     f'(//div[@class="media-story-card__placement-container__1R55-"]//div//img)[{index}]', 'src')
 
                 image_filename = f'image_news{index}.png'
-                logger.info(image_filename)
-
+                
                 image_path = os.path.join(
                     DIRECTORIES.IMAGE_PATH, image_filename)
                 self.download_picture(image_src, image_path)
@@ -176,11 +173,9 @@ class NewsFromReuters:
                 image_filename = ''
 
             money_present = self.is_money_present(headline)
-            logger.info(money_present)
-
+           
             count_phrase = self.count_of_search_string(
                 headline, self.phrase.lower())
-            logger.info(count_phrase)
 
         number_of_results = number_of_results.split('results')[0].strip()
 
@@ -299,7 +294,7 @@ class NewsFromReuters:
                     date_to_check = self.find_format(date)
 
                 if date_to_check >= start_date:
-                    print(f'news{i}')
+                    
                     headline_list.append(title)
                     date_list.append(date)
                     image_filename_list.append(image_filename)
