@@ -323,6 +323,9 @@ class NewsFromReuters:
 
         if next_button_enabled:
 
+            if self.browser.is_element_visible('//*[text()="Allow All"]'):
+                self.browser.click_element('//*[text()="Allow All"]')
+
             self.browser.click_element(
                 f'(//button[contains(@aria-label, "Next stories")])')
 
