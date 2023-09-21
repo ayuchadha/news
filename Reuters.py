@@ -263,49 +263,56 @@ class NewsFromReuters:
             list = self.browser.get_webelements(
                 f'(//li[@class="search-results__item__2oqiX"])')
             for i in range(1, (len(list)+1)):
+                
+                try:
 
-                title, date, image_filename, money_present, count_phrase = self.get_news_data(
-                    i)
+                    title, date, image_filename, money_present, count_phrase = self.get_news_data(
+                        i)
 
-                current_datetime = datetime.now()
+                    current_datetime = datetime.now()
 
-                if 'an hour ago' in date or 'a min ago' in date:
-                    date_to_check = datetime.today()
+                    if 'an hour ago' in date or 'a min ago' in date:
+                        date_to_check = datetime.today()
 
-                elif "min ago" in date:
-                    minutes_ago = int(date.split()[0])
-                    delta = timedelta(minutes=minutes_ago)
-                    date_to_check = current_datetime - delta
+                    elif "min ago" in date:
+                        minutes_ago = int(date.split()[0])
+                        delta = timedelta(minutes=minutes_ago)
+                        date_to_check = current_datetime - delta
 
-                elif "sec ago" in date:
+                    elif "sec ago" in date:
 
-                    seconds_ago = int(date.split()[0])
-                    delta = timedelta(seconds=seconds_ago)
-                    date_to_check = current_datetime - delta
+                        seconds_ago = int(date.split()[0])
+                        delta = timedelta(seconds=seconds_ago)
+                        date_to_check = current_datetime - delta
 
-                elif "hours ago" in date:
+                    elif "hours ago" in date:
 
-                    hours_ago = int(date.split()[0])
-                    delta = timedelta(hours=hours_ago)
-                    date_to_check = current_datetime - delta
+                        hours_ago = int(date.split()[0])
+                        delta = timedelta(hours=hours_ago)
+                        date_to_check = current_datetime - delta
 
-                else:
-                    date_to_check = self.find_format(date)
+                    else:
+                        date_to_check = self.find_format(date)
 
-                if date_to_check >= start_date:
-                    
-                    headline_list.append(title)
-                    date_list.append(date)
-                    image_filename_list.append(image_filename)
-                    money_present_list.append(money_present)
-                    count_phrase_list.append(count_phrase)
-                    count = count + 1
-                else:
-                    loop_end = True
+                    if date_to_check >= start_date:
+                        
+                        headline_list.append(title)
+                        date_list.append(date)
+                        image_filename_list.append(image_filename)
+                        money_present_list.append(money_present)
+                        count_phrase_list.append(count_phrase)
+                        count = count + 1
+                    else:
+                        loop_end = True
+                        break
+
+                except UnboundLocalError:
+                    pass
+
+                if loop_end:
                     break
 
-            if loop_end:
-                break
+                
 
         return headline_list, date_list, image_filename_list, money_present_list, count_phrase_list
 
